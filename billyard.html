@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Бильярд: статистика тренировок</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 500px;
+            background-color: #1e1e1e;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        h2, h3 {
+            font-weight: 400;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+
+        button {
+            background-color: #2c2c2c;
+            border: none;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            border: 1px solid #3a3a3a;
+        }
+
+        button:active {
+            transform: scale(0.97);
+            background-color: #3a3a3a;
+        }
+
+        button.primary {
+            background-color: #0d6efd;
+            border-color: #0a58ca;
+        }
+
+        button.secondary {
+            background-color: #2c2c2c;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: #2c2c2c;
+            border: 1px solid #3a3a3a;
+            border-radius: 30px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #0d6efd;
+        }
+
+        .score-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .current-score {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .match-score {
+            font-size: 16px;
+            color: #aaa;
+        }
+
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .category-card {
+            background-color: #2c2c2c;
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid #3a3a3a;
+        }
+
+        .category-name {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 8px;
+        }
+
+        .category-value {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .category-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #0d6efd;
+            border: none;
+            border-radius: 40px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-buttons button {
+            flex: 1;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #1e1e1e;
+            border-radius: 20px;
+            padding: 25px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid #3a3a3a;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            max-width: 120px;
+        }
+
+        .stats-table {
+            background-color: #2c2c2c;
+            border-radius: 16px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        .stats-row:last-child {
+            border-bottom: none;
+        }
+
+        .player-switch {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .player-switch button {
+            flex: 1;
+            background-color: #2c2c2c;
+            border: 1px solid #3a3a3a;
+        }
+
+        .player-switch button.active {
+            background-color: #0d6efd;
+            border-color: #0a58ca;
+        }
+
+        .small-note {
+            font-size: 14px;
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        .link-box {
+            background-color: #2c2c2c;
+            padding: 10px;
+            border-radius: 30px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 15px 0;
+        }
+
+        .link-box input {
+            flex: 1;
+            background-color: #1e1e1e;
+            border: none;
+            padding: 8px 12px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Экран создания игры -->
+        <div id="create-game-screen">
+            <h2>Создание игры</h2>
+            <div class="input-group">
+                <label>Имя первого игрока</label>
+                <input type="text" id="player1-name" placeholder="Например, Игрок 1" value="Игрок 1">
+            </div>
+            <div class="input-group">
+                <label>Имя второго игрока</label>
+                <input type="text" id="player2-name" placeholder="Например, Игрок 2" value="Игрок 2">
+            </div>
+            <button id="create-game-btn" class="primary" style="width:100%;">Создать игру</button>
+            <div id="game-link-container" class="hidden">
+                <p style="margin-top:20px;">Ссылка для второго игрока:</p>
+                <div class="link-box">
+                    <input type="text" id="game-link" readonly>
+                    <button id="copy-link-btn">Копировать</button>
+                </div>
+                <button id="start-game-btn" class="primary" style="width:100%;">Начать игру</button>
+            </div>
+        </div>
+
+        <!-- Основной игровой экран -->
+        <div id="game-screen" class="hidden">
+            <div class="score-header">
+                <span class="current-score" id="current-score">0:0</span>
+                <span class="match-score" id="match-score">Партии: 0:0</span>
+            </div>
+            <div id="current-player-indicator" style="text-align:center; margin-bottom:10px; font-size:18px;">Ход: Игрок 1</div>
+            
+            <div id="player-categories" class="categories">
+                <!-- Динамически заполняется js -->
+            </div>
+
+            <div class="action-buttons">
+                <button id="next-turn-btn" class="primary">Следующий ход</button>
+                <button id="end-match-btn" class="secondary">Завершить игру</button>
+            </div>
+        </div>
+
+        <!-- Экран статистики партии -->
+        <div id="stats-screen" class="hidden">
+            <h2>Статистика партии</h2>
+            <div id="match-score-stats" style="font-size:24px; text-align:center; margin:10px 0;">0:0</div>
+            
+            <div class="player-switch" id="player-switch">
+                <button id="stats-player1-btn" class="active">Моя статистика</button>
+                <button id="stats-player2-btn">Статистика <span id="player2-name-stats"></span></button>
+            </div>
+
+            <div id="player1-stats" class="stats-table">
+                <!-- заполняется -->
+            </div>
+            <div id="player2-stats" class="stats-table hidden">
+                <!-- заполняется -->
+            </div>
+
+            <div class="action-buttons">
+                <button id="next-party-btn" class="primary">Следующая партия</button>
+                <button id="end-game-from-stats-btn" class="secondary">Завершить игру</button>
+            </div>
+        </div>
+
+        <!-- Экран итоговой статистики -->
+        <div id="final-stats-screen" class="hidden">
+            <h2>Итоговая статистика игры</h2>
+            <div id="final-match-score" style="font-size:24px; text-align:center; margin:20px 0;">0:0</div>
+            <div class="player-switch" id="final-player-switch">
+                <button id="final-stats-player1-btn" class="active">Моя статистика</button>
+                <button id="final-stats-player2-btn">Статистика <span id="final-player2-name"></span></button>
+            </div>
+            <div id="final-player1-stats" class="stats-table"></div>
+            <div id="final-player2-stats" class="stats-table hidden"></div>
+            <button id="new-game-btn" class="primary" style="width:100%; margin-top:20px;">Новая игра</button>
+        </div>
+
+        <!-- Модальное окно выбора промаха -->
+        <div id="miss-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <h3>На каком шаре промахнулись?</h3>
+                <div class="modal-buttons">
+                    <button id="miss-own">Свояк</button>
+                    <button id="miss-opponent">Чужой</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // Состояние приложения
+            let state = {
+                player1: 'Игрок 1',
+                player2: 'Игрок 2',
+                matchWins: { p1: 0, p2: 0 }, // победы по партиям
+                currentParty: 1,
+                breaker: 1, // кто разбивает в текущей партии (1 или 2)
+                // Текущая партия
+                party: {
+                    score: { p1: 0, p2: 0 },
+                    stats: {
+                        p1: { break: { shots:0, made:0 }, own: { shots:0, made:0 }, opponent: { shots:0, made:0 }, random: { shots:0, made:0 } },
+                        p2: { break: { shots:0, made:0 }, own: { shots:0, made:0 }, opponent: { shots:0, made:0 }, random: { shots:0, made:0 } }
+                    },
+                    currentPlayer: 1, // 1 или 2
+                    partyFinished: false
+                },
+                // Общая статистика за игру (сумма по партиям)
+                totalStats: {
+                    p1: { break: { shots:0, made:0 }, own: { shots:0, made:0 }, opponent: { shots:0, made:0 }, random: { shots:0, made:0 } },
+                    p2: { break: { shots:0, made:0 }, own: { shots:0, made:0 }, opponent: { shots:0, made:0 }, random: { shots:0, made:0 } }
+                }
+            };
+
+            // Вспомогательные функции
+            function saveStateToUrl() {
+                // Кодируем состояние в base64 и сохраняем в hash
+                const stateStr = JSON.stringify(state);
+                const encoded = btoa(encodeURIComponent(stateStr));
+                window.location.hash = `game=${encoded}`;
+            }
+
+            function loadStateFromUrl() {
+                const hash = window.location.hash.slice(1);
+                if (hash.startsWith('game=')) {
+                    try {
+                        const encoded = hash.slice(5);
+                        const decoded = decodeURIComponent(atob(encoded));
+                        state = JSON.parse(decoded);
+                        return true;
+                    } catch (e) {
+                        console.error('Ошибка загрузки состояния', e);
+                    }
+                }
+                return false;
+            }
+
+            function generateShareLink() {
+                saveStateToUrl();
+                return window.location.href;
+            }
+
+            // Обновление интерфейса
+            function showScreen(screenId) {
+                document.getElementById('create-game-screen').classList.add('hidden');
+                document.getElementById('game-screen').classList.add('hidden');
+                document.getElementById('stats-screen').classList.add('hidden');
+                document.getElementById('final-stats-screen').classList.add('hidden');
+                document.getElementById(screenId).classList.remove('hidden');
+            }
+
+            function renderGameScreen() {
+                const p1Name = state.player1;
+                const p2Name = state.player2;
+                const currentScore = `${state.party.score.p1}:${state.party.score.p2}`;
+                const matchScore = `Партии: ${state.matchWins.p1}:${state.matchWins.p2}`;
+                document.getElementById('current-score').textContent = currentScore;
+                document.getElementById('match-score').textContent = matchScore;
+                document.getElementById('current-player-indicator').textContent = `Ход: ${state.party.currentPlayer === 1 ? p1Name : p2Name}`;
+
+                // Отображаем категории для текущего игрока
+                const container = document.getElementById('player-categories');
+                const playerStat = state.party.stats[`p${state.party.currentPlayer}`];
+                const categories = [
+                    { key: 'break', name: 'Начальный удар' },
+                    { key: 'own', name: 'Свояки' },
+                    { key: 'opponent', name: 'Чужие шары' },
+                    { key: 'random', name: 'Случайные шары' }
+                ];
+                let html = '';
+                for (let cat of categories) {
+                    const stat = playerStat[cat.key];
+                    html += `
+                        <div class="category-card">
+                            <div class="category-name">${cat.name}</div>
+                            <div class="category-value">${stat.made}</div>
+                            <button class="category-btn" data-category="${cat.key}">+</button>
+                        </div>
+                    `;
+                }
+                container.innerHTML = html;
+
+                // Привязываем события на кнопки +
+                document.querySelectorAll('.category-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const category = e.target.dataset.category;
+                        handleAddMade(category);
+                    });
+                });
+            }
+
+            function handleAddMade(category) {
+                const player = `p${state.party.currentPlayer}`;
+                // Увеличиваем made и shots
+                state.party.stats[player][category].made += 1;
+                state.party.stats[player][category].shots += 1;
+                // Обновляем общий счет партии
+                state.party.score[player] += 1;
+                // Проверяем завершение партии
+                if (state.party.score[player] >= 8) {
+                    finishParty();
+                } else {
+                    renderGameScreen();
+                }
+            }
+
+            function handleNextTurn() {
+                // Показываем модальное окно выбора промаха
+                document.getElementById('miss-modal').classList.remove('hidden');
+            }
+
+            function handleMiss(shotType) {
+                // shotType: 'own' или 'opponent'
+                document.getElementById('miss-modal').classList.add('hidden');
+                const player = `p${state.party.currentPlayer}`;
+                // Добавляем удар без забитого
+                state.party.stats[player][shotType].shots += 1;
+                // Меняем игрока
+                state.party.currentPlayer = state.party.currentPlayer === 1 ? 2 : 1;
+                renderGameScreen();
+            }
+
+            function finishParty() {
+                // Определяем победителя партии
+                const winner = state.party.score.p1 >= 8 ? 1 : 2;
+                state.matchWins[`p${winner}`] += 1;
+
+                // Добавляем статистику партии в общую
+                for (let p of ['p1', 'p2']) {
+                    for (let cat of ['break', 'own', 'opponent', 'random']) {
+                        state.totalStats[p][cat].shots += state.party.stats[p][cat].shots;
+                        state.totalStats[p][cat].made += state.party.stats[p][cat].made;
+                    }
+                }
+
+                state.party.partyFinished = true;
+                showStatsScreen();
+            }
+
+            function showStatsScreen() {
+                showScreen('stats-screen');
+                document.getElementById('match-score-stats').textContent = `${state.party.score.p1}:${state.party.score.p2}`;
+                document.getElementById('player2-name-stats').textContent = state.player2;
+                // Активируем вкладку "Моя статистика"
+                showPlayerStats(1);
+            }
+
+            function showPlayerStats(playerNumber) {
+                // playerNumber: 1 или 2
+                const statsDiv1 = document.getElementById('player1-stats');
+                const statsDiv2 = document.getElementById('player2-stats');
+                const btn1 = document.getElementById('stats-player1-btn');
+                const btn2 = document.getElementById('stats-player2-btn');
+
+                if (playerNumber === 1) {
+                    statsDiv1.classList.remove('hidden');
+                    statsDiv2.classList.add('hidden');
+                    btn1.classList.add('active');
+                    btn2.classList.remove('active');
+                    renderStatsTable('player1-stats', state.party.stats.p1, state.party.score.p1);
+                } else {
+                    statsDiv2.classList.remove('hidden');
+                    statsDiv1.classList.add('hidden');
+                    btn2.classList.add('active');
+                    btn1.classList.remove('active');
+                    renderStatsTable('player2-stats', state.party.stats.p2, state.party.score.p2);
+                }
+            }
+
+            function renderStatsTable(containerId, stats, totalScore) {
+                const container = document.getElementById(containerId);
+                const categories = [
+                    { key: 'break', name: 'Начальный удар' },
+                    { key: 'own', name: 'Свояки' },
+                    { key: 'opponent', name: 'Чужие' },
+                    { key: 'random', name: 'Случайные' }
+                ];
+                let html = `<div class="stats-row"><span>Всего забито:</span><span>${totalScore}</span></div>`;
+                for (let cat of categories) {
+                    const stat = stats[cat.key];
+                    const efficiency = stat.shots > 0 ? ((stat.made / stat.shots) * 100).toFixed(1) : '0.0';
+                    html += `
+                        <div class="stats-row">
+                            <span>${cat.name}:</span>
+                            <span>${stat.made}/${stat.shots} (${efficiency}%)</span>
+                        </div>
+                    `;
+                }
+                // Общая результативность
+                const totalShots = stats.break.shots + stats.own.shots + stats.opponent.shots + stats.random.shots;
+                const totalMade = stats.break.made + stats.own.made + stats.opponent.made + stats.random.made;
+                const totalEfficiency = totalShots > 0 ? ((totalMade / totalShots) * 100).toFixed(1) : '0.0';
+                html += `<div class="stats-row"><span>Общая:</span><span>${totalMade}/${totalShots} (${totalEfficiency}%)</span></div>`;
+                container.innerHTML = html;
+            }
+
+            function nextParty() {
+                // Сброс партии, определение разбивающего
+                state.party = {
+                    score: { p1: 0, p2: 0 },
+                    stats: {
+                        p1: { break: { shots:0, made:0 }, own: { shots:0, made:0 }, opponent: { shots:0, made:0 }, random: { shots:0, made:0 } },
+                        p2: { break: { shots:0, made:0 }, own: { shots:0, made:0 }, opponent: { shots:0, made:0 }, random: { shots:0, made:0 } }
+                    },
+                    currentPlayer: (state.breaker === 1 ? 2 : 1), // следующий разбивающий будет начинать
+                    partyFinished: false
+                };
+                // Чередуем разбивающего
+                state.breaker = state.breaker === 1 ? 2 : 1;
+                // Первый ход за разбивающим
+                state.party.currentPlayer = state.breaker;
+                showScreen('game-screen');
+                renderGameScreen();
+            }
+
+            function finishGame() {
+                showFinalStatsScreen();
+            }
+
+            function showFinalStatsScreen() {
+                showScreen('final-stats-screen');
+                document.getElementById('final-match-score').textContent = `${state.matchWins.p1}:${state.matchWins.p2}`;
+                document.getElementById('final-player2-name').textContent = state.player2;
+                showFinalPlayerStats(1);
+            }
+
+            function showFinalPlayerStats(playerNumber) {
+                const div1 = document.getElementById('final-player1-stats');
+                const div2 = document.getElementById('final-player2-stats');
+                const btn1 = document.getElementById('final-stats-player1-btn');
+                const btn2 = document.getElementById('final-stats-player2-btn');
+
+                if (playerNumber === 1) {
+                    div1.classList.remove('hidden');
+                    div2.classList.add('hidden');
+                    btn1.classList.add('active');
+                    btn2.classList.remove('active');
+                    renderStatsTable('final-player1-stats', state.totalStats.p1, state.matchWins.p1); // здесь totalScore не совсем корректен, но для итога можно показать победы
+                } else {
+                    div2.classList.remove('hidden');
+                    div1.classList.add('hidden');
+                    btn2.classList.add('active');
+                    btn1.classList.remove('active');
+                    renderStatsTable('final-player2-stats', state.totalStats.p2, state.matchWins.p2);
+                }
+            }
+
+            function resetToNewGame() {
+                // Сброс состояния
+                state = {
+                    player1: document.getElementById('player1-name').value || 'Игрок 1',
+                    player2: document.getElementById('player2-name').value || 'Игрок 2',
+                    matchWins: { p1: 0, p2: 0 },
+                    currentParty: 1,
+                    breaker: 1,
+                    party: {
+                        score: { p1: 0, p2: 0 },
+                        stats: {
+                            p1: { break: { shots:0, made:0 }, own: { shots:0, made:0 }, opponent: { shots:0, made:0 }, random: { shots:0, made:0 } },
+                            p2: { break: { shots:0, made:0 }, own: { shots:0, made:0 }, opponent: { shots:0, made:0 }, random: { shots:0, made:0 } }
+                        },
+                        currentPlayer: 1,
+                        partyFinished: false
+                    },
+                    totalStats: {
+                        p1: { break: { shots:0, made:0 }, own: { shots:0, made:0 }, opponent: { shots:0, made:0 }, random: { shots:0, made:0 } },
+                        p2: { break: { shots:0, made:0 }, own: { shots:0, made:0 }, opponent: { shots:0, made:0 }, random: { shots:0, made:0 } }
+                    }
+                };
+                // Первый разбивающий - первый игрок
+                state.breaker = 1;
+                state.party.currentPlayer = 1;
+            }
+
+            // Инициализация при загрузке
+            function init() {
+                // Проверяем URL
+                if (loadStateFromUrl()) {
+                    // Загружено состояние, показываем игру
+                    showScreen('game-screen');
+                    renderGameScreen();
+                } else {
+                    showScreen('create-game-screen');
+                }
+
+                // Кнопка создания игры
+                document.getElementById('create-game-btn').addEventListener('click', () => {
+                    const p1 = document.getElementById('player1-name').value || 'Игрок 1';
+                    const p2 = document.getElementById('player2-name').value || 'Игрок 2';
+                    resetToNewGame();
+                    state.player1 = p1;
+                    state.player2 = p2;
+                    // Генерируем ссылку
+                    const link = generateShareLink();
+                    document.getElementById('game-link').value = link;
+                    document.getElementById('game-link-container').classList.remove('hidden');
+                });
+
+                // Копирование ссылки
+                document.getElementById('copy-link-btn').addEventListener('click', () => {
+                    const linkInput = document.getElementById('game-link');
+                    linkInput.select();
+                    document.execCommand('copy');
+                    alert('Ссылка скопирована!');
+                });
+
+                // Начать игру по кнопке после создания
+                document.getElementById('start-game-btn').addEventListener('click', () => {
+                    showScreen('game-screen');
+                    renderGameScreen();
+                });
+
+                // Кнопка "Следующий ход"
+                document.getElementById('next-turn-btn').addEventListener('click', handleNextTurn);
+
+                // Обработка модального окна
+                document.getElementById('miss-own').addEventListener('click', () => handleMiss('own'));
+                document.getElementById('miss-opponent').addEventListener('click', () => handleMiss('opponent'));
+
+                // Кнопка "Завершить игру" на основном экране
+                document.getElementById('end-match-btn').addEventListener('click', finishGame);
+
+                // Переключение статистики в экране партии
+                document.getElementById('stats-player1-btn').addEventListener('click', () => showPlayerStats(1));
+                document.getElementById('stats-player2-btn').addEventListener('click', () => showPlayerStats(2));
+
+                // Кнопка "Следующая партия"
+                document.getElementById('next-party-btn').addEventListener('click', nextParty);
+
+                // Кнопка "Завершить игру" на экране статистики партии
+                document.getElementById('end-game-from-stats-btn').addEventListener('click', finishGame);
+
+                // Переключение итоговой статистики
+                document.getElementById('final-stats-player1-btn').addEventListener('click', () => showFinalPlayerStats(1));
+                document.getElementById('final-stats-player2-btn').addEventListener('click', () => showFinalPlayerStats(2));
+
+                // Новая игра
+                document.getElementById('new-game-btn').addEventListener('click', () => {
+                    window.location.hash = '';
+                    location.reload();
+                });
+            }
+
+            init();
+        })();
+    </script>
+</body>
+</html>
